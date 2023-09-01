@@ -3,7 +3,7 @@
 library(shiny)
 library(tidyverse)
 library(palmerpenguins)
-library()
+library(DT)
 
 # user interface ----------------------------------------------------------
 
@@ -23,6 +23,10 @@ ui <- fluidPage(
               label = "Choose and island",
               choices = c("Biscoe", "Dream", "Torgersen")),
   
+  selectInput(inputId = "species_input",
+              label = "Choose penguin species",
+              choices = c("Adelie", "Chinstrap", "Gentoo")),
+  
   plotOutput(outputId = "bodyMass_scatterplot"),
   
   dataTableOutput(outputId = "penguin_data"),
@@ -35,7 +39,9 @@ server <- function(input, output, session) {
   
   body_mass_df <- reactive({
     penguins %>% filter(body_mass_g > input$body_mass_input[1] &
-                          body_mass_g < input$body_mass_input[2])
+                          body_mass_g < input$body_mass_input[2] &
+                          island %in% input$island_input
+                        ) 
   })
   
   # Render scatter plot ----
@@ -54,7 +60,13 @@ server <- function(input, output, session) {
             legend.background = element_rect(color = "white"))
   })
   
+  # Render data table
   
+  output$penguin_data <- renderDT(
+    body_mass_df(), options = list(
+      pageLength = 1,
+      initComplete = JS('function(setting, json) { alert("done"); }'))
+    )
 }
 
 # combine ui and server  --------------------------------------------------
